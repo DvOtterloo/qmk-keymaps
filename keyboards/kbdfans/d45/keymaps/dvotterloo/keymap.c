@@ -73,8 +73,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 	)
 };
 
-
+uint8_t mod_state;
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+	mod_state = get_mods();
     switch (keycode) {
         case QWERTY:
             if (record->event.pressed) {
@@ -104,6 +105,26 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 				update_tri_layer(_LOWER, _RAISE, _ADJUST);
 			}
 			return false;
+		case KC_BSPC:
+		{
+			static bool delkey_registered;
+			if (record->event.pressed) {
+				if (mod_state & MOD_MASK_SHIFT) {
+					del_mods(MOD_MASK_SHIFT);
+					register_code(KC_DEL);
+					delkey_registered = true;
+					set_mods(mod_state);
+					return false;
+				}
+			} else {
+				if (delkey_registered) {
+					unregister_code(KC_DEL);
+					delkey_registered = false;
+					return false;
+				}
+			}
+			return true;
+		}
     }
     return true;
 }
